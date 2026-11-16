@@ -1,47 +1,64 @@
-# Claude Smart Naming · 智能文件命名 Skill
+# Claude 智能体输出治理 · Output Governance
 
-让 AI 生成的文件名「人能看懂」，杜绝 `output_20261116_a1b2c3.md` 这类天书命名。
+让 AI 智能体（Claude Code 等）产生的文件「**人能看懂、可控、可回溯**」——不只是命名，是**整套输出治理**。
 
 ## 解决什么问题
 
-AI 智能体（Claude Code 等）生成文件时，经常偷懒用 `output + 日期 + 随机串` 当文件名，人看不懂、也没法归档管理。这个 skill 强制它用「内容摘要」起名。
+AI 智能体工作时会乱吐文件：`output_20261116_a1b2c3.md`、一堆 `final_v2` 副本、散落的临时文件、内容重复的文件……本仓库用「**规范 + 引擎**」双向治理：
 
-## 命名规则
+- **规范层**（skills）：告诉 Claude 该怎么命名、怎么组织
+- **引擎层**（govern.py）：真正能执行的工具，扫描 / 重命名 / 归档 / 清理 / 去重
 
-| 维度 | 规则 |
-|---|---|
-| 文件名主体 | 2~8 字内容摘要，中文内容用中文、技术类用英文 kebab-case |
-| 禁用词 | `output` / `result` / `temp` / `未命名` / 随机串（hash/UUID/时间戳） |
-| 日期 / 版本 | 一次性任务不加日期；持续演进任务（论文/项目/日志）加 `_YYYYMMDD` 或 `_v2` |
-| 分类目录 | `报告/` `笔记/` `工具/` `临时/` `论文/` `项目/` |
+## 全生命周期模型
 
-判断口诀：**这文件未来会不会有第二版？** 会 → 带版本/日期；不会 → 纯名。
+```
+生成(命名) ──▶ 组织(分类) ──▶ 活跃(使用) ──▶ 归档(回溯) ──▶ 清理(删除)
+```
+
+## 引擎：govern.py
+
+```bash
+python govern.py scan [目录]       # 体检报告（只读）
+python govern.py rename [目录]     # 重命名乱命名文件
+python govern.py organize [目录]   # 按分类整理根目录文件
+python govern.py archive [目录]    # 归档长期未动的文件
+python govern.py cleanup [目录]    # 清理临时/垃圾文件
+python govern.py dedup [目录]      # 按内容哈希删除重复文件
+```
+
+- 默认 **dry-run**（只预览，不修改），加 `--apply` 才真正执行
+- 归档阈值用 `--days N`（默认 30 天）
+
+**用法示例**：
+
+```bash
+python govern.py scan ~/project          # 先看体检报告
+python govern.py rename ~/project --apply # 确认后动手
+```
 
 ## 安装
 
-把 skill 目录放进 Claude Code 的全局 skills 目录：
+1. skills 放进 Claude Code 全局目录：
 
 ```bash
 git clone https://github.com/resapomr6-cell/claude-smart-naming.git
 cp -r claude-smart-naming/skills/smart-naming ~/.claude/skills/
+cp -r claude-smart-naming/skills/output-governance ~/.claude/skills/
 ```
 
-或软链：
+2. 引擎 `govern.py` 是独立脚本，放哪都行，用时：
 
 ```bash
-ln -s "$(pwd)/skills/smart-naming" ~/.claude/skills/smart-naming
+python govern.py <command> <目标目录>
 ```
 
-## 建议配合常驻规则
+## 命名规则（smart-naming）
 
-skill 是「按需触发」的，命名这种「每次都要遵守」的规则，建议再加到 `~/.claude/CLAUDE.md` 里常驻：
+文件名主体用 **2~8 字内容摘要**，禁止 `output` / `result` / 随机串；一次性任务不加日期，持续演进任务（论文/项目/日志）加 `_YYYYMMDD` 或 `_v2`。
 
-```markdown
-# 文件命名规范（常驻）
-生成任何文件时用「智能命名」规则（详见 skill `smart-naming`）：
-文件名主体用 2~8 字内容摘要，禁止 output/result/随机串；
-一次性任务不加日期，持续演进任务加 _YYYYMMDD 或 _v2。
-```
+## 分类目录
+
+`报告/` `笔记/` `工具/` `数据/` `图片/` `文档/` `归档/`
 
 ## License
 
