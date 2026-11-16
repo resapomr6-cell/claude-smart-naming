@@ -22,7 +22,7 @@ AI 智能体（Claude Code 等）生成文件时，经常偷懒用 `output + 日
 把 skill 目录放进 Claude Code 的全局 skills 目录：
 
 ```bash
-git clone https://github.com/<你的用户名>/claude-smart-naming.git
+git clone https://github.com/resapomr6-cell/claude-smart-naming.git
 cp -r claude-smart-naming/skills/smart-naming ~/.claude/skills/
 ```
 
